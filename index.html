@@ -232,6 +232,11 @@
     align-items: center;
     text-align: center;
     gap: 8px;
+    cursor: pointer;
+    transition: transform 150ms ease;
+  }
+  .badge:hover {
+    transform: scale(1.05);
   }
 
   .badge-medal {
@@ -260,6 +265,87 @@
     margin-top: 26px;
     font-size: 12.5px;
     color: #5c6f85;
+  }
+
+  /* ---------- Modal Estilizado ---------- */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(9, 18, 32, 0.85);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 200ms ease;
+    padding: 20px;
+  }
+  .modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .modal-card {
+    position: relative;
+    background: linear-gradient(180deg, var(--panel) 0%, #10203a 100%);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-panel);
+    padding: 32px 24px 28px;
+    width: 100%;
+    max-width: 380px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .modal-close-x {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 24px;
+    font-weight: 600;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: color 150ms ease, background 150ms ease;
+  }
+  .modal-close-x:hover {
+    color: var(--text);
+    background: rgba(255,255,255,0.05);
+  }
+
+  /* Versión grande de la insignia dentro del modal */
+  .modal-card .badge-medal {
+    width: 110px;
+    height: 110px;
+    font-size: 48px;
+    box-shadow:
+      0 0 0 4px var(--bg-deep),
+      0 0 0 6px var(--panel-border),
+      0 12px 24px -6px rgba(217,164,65,.5);
+  }
+
+  .modal-card h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 24px;
+    margin: 4px 0 0;
+    color: var(--gold);
+    word-break: break-word;
+  }
+  .modal-card p {
+    font-size: 14.5px;
+    color: var(--text-dim);
+    margin: 0;
+    line-height: 1.5;
+    word-break: break-word;
   }
 
   /* Add-badge button + scanner */
@@ -386,6 +472,17 @@
   </div>
 </div>
 
+<!-- Modal Detalle Insignia -->
+<div class="modal-overlay" id="badge-detail-modal">
+  <div class="modal-card">
+    <button type="button" class="modal-close-x" id="modal-badge-x" aria-label="Cerrar">&times;</button>
+    <div id="modal-badge-medal"></div>
+    <h2 id="modal-badge-title">Nombre de la Insignia</h2>
+    <p id="modal-badge-desc">Descripción de la insignia...</p>
+    <button type="button" class="btn" id="modal-badge-close" style="margin-top: 8px; width: 100%;">Cerrar</button>
+  </div>
+</div>
+
 <div class="scanner-overlay" id="scanner-overlay">
   <div class="scanner-box">
     <div class="scanner-video-wrap">
@@ -415,10 +512,6 @@
   const db = firebase.database();
 
   // ---------- UUID extraction ----------
-  // The QR code points at .../index.html?uuid=<uuid>.
-  // Once we see a uuid in the URL we remember it in localStorage, so a
-  // person can come back later (bookmark, home screen, etc.) without the
-  // query param and still land on their own collection.
   const STORAGE_KEY = 'uuid_usuario';
 
   function getUUID() {
@@ -440,10 +533,6 @@
 
   const uuid = getUUID();
 
-  // A badge-station QR adds ?uuid_insignia=<id> on top of the user's own
-  // uuid (either in the same URL, or picked up from localStorage). This is
-  // read fresh from the URL every time, never stored, since it represents
-  // one specific scan.
   function getInsigniaUUID() {
     const params = new URLSearchParams(window.location.search);
     const raw = params.get('uuid_insignia');
@@ -464,28 +553,18 @@
     return div.innerHTML;
   }
 
-  // ---------- Award a badge, then render ----------
-  // If the URL carries ?uuid_insignia=, check it's a real badge in
-  // "insignias" and, if so, record the link in "usuarios_isignias"
-  // (keyed by user, then by badge) before showing the collection. That
-  // table — not any field on the user — is the source of truth for which
-  // badges someone has.
   function awardBadgeIfNeeded(uuid, insigniaId) {
     if (!insigniaId) return Promise.resolve(false);
     return db.ref('insignias/' + insigniaId).once('value')
       .then(snap => {
-        if (!snap.exists()) return false; // unknown badge id, ignore quietly
+        if (!snap.exists()) return false;
         return db.ref('usuarios_isignias/' + uuid + '/' + insigniaId).set(true).then(() => true);
       })
-      .catch(() => false); // don't block viewing the collection over this
+      .catch(() => false);
   }
 
   function handleUser(uuid, usuario) {
     awardBadgeIfNeeded(uuid, uuidInsignia).then(() => {
-      // Once the badge has been recorded, drop the query string (uuid and
-      // uuid_insignia) from the visible URL. The uuid is already saved in
-      // localStorage, so nothing is lost — this just keeps it out of the
-      // address bar / browser history.
       if (uuidInsignia) {
         const cleanUrl = window.location.pathname + window.location.hash;
         history.replaceState(null, '', cleanUrl);
@@ -551,6 +630,54 @@
       });
   }
 
+  // ---------- Modal Detalle ----------
+  const badgeDetailModal = document.getElementById('badge-detail-modal');
+  const modalCloseBtn = document.getElementById('modal-badge-close');
+  const modalXBtn = document.getElementById('modal-badge-x');
+
+  function openBadgeDetail(info) {
+    const titleEl = document.getElementById('modal-badge-title');
+    const descEl = document.getElementById('modal-badge-desc');
+    const medalContainer = document.getElementById('modal-badge-medal');
+
+    titleEl.textContent = info.nombre || 'Insignia';
+    descEl.textContent = info.descripcion || 'Esta insignia no tiene descripción asignada.';
+
+    medalContainer.innerHTML = '';
+    const medal = document.createElement('div');
+    medal.className = 'badge-medal';
+    
+    if (info.ruta) {
+      const img = document.createElement('img');
+      img.src = encodeURI(info.ruta);
+      img.alt = '';
+      img.onerror = function () {
+        img.remove();
+        medal.textContent = info.icono || '🏅';
+      };
+      medal.appendChild(img);
+    } else {
+      medal.textContent = info.icono || '🏅';
+    }
+
+    medalContainer.appendChild(medal);
+    badgeDetailModal.classList.add('active');
+  }
+
+  function closeBadgeDetail() {
+    badgeDetailModal.classList.remove('active');
+  }
+
+  modalCloseBtn.addEventListener('click', closeBadgeDetail);
+  modalXBtn.addEventListener('click', closeBadgeDetail);
+
+  // Cerrar al hacer clic en el fondo oscuro (fuera de la tarjeta)
+  badgeDetailModal.addEventListener('click', (e) => {
+    if (e.target === badgeDetailModal) {
+      closeBadgeDetail();
+    }
+  });
+
   // ---------- Render collection ----------
   let currentUsuario = null;
 
@@ -597,7 +724,6 @@
 
             const medal = document.createElement('div');
             medal.className = 'badge-medal';
-            medal.title = info.descripcion || nombre;
 
             if (info.ruta) {
               const img = document.createElement('img');
@@ -614,6 +740,10 @@
             }
 
             badge.appendChild(medal);
+            
+            // Evento para abrir el modal
+            badge.addEventListener('click', () => openBadgeDetail(info));
+
             grid.appendChild(badge);
           });
 
@@ -647,9 +777,6 @@
     catch (e) { barcodeDetector = null; }
   }
 
-  // Extracts the badge id from whatever the QR encodes: either a bare id,
-  // or a full URL like .../index.html?uuid_insignia=<id> (optionally with
-  // ?uuid=... alongside it, which we ignore here).
   function extractInsigniaId(raw) {
     const text = (raw || '').trim();
     if (!text) return null;
@@ -657,9 +784,9 @@
       const url = new URL(text);
       const fromParam = url.searchParams.get('uuid_insignia');
       if (fromParam && fromParam.trim()) return fromParam.trim();
-      return null; // it's a URL but not one carrying a badge id
+      return null;
     } catch (e) {
-      return text; // not a URL: treat the raw QR content as the id
+      return text;
     }
   }
 
@@ -748,8 +875,6 @@
       closeScanner();
       if (added) {
         renderCollection(uuid, currentUsuario);
-      } else {
-        // Unknown badge id: nothing changed, just leave the collection as is.
       }
     });
   }
