@@ -343,7 +343,7 @@
   // Once we see a uuid in the URL we remember it in localStorage, so a
   // person can come back later (bookmark, home screen, etc.) without the
   // query param and still land on their own collection.
-  const STORAGE_KEY = 'usuario_uuid';
+  const STORAGE_KEY = 'uuid_usuario';
 
   function getUUID() {
     const params = new URLSearchParams(window.location.search);
@@ -364,6 +364,18 @@
 
   const uuid = getUUID();
 
+  // A badge-station QR adds ?uuid_insignia=<id> on top of the user's own
+  // uuid (either in the same URL, or picked up from localStorage). This is
+  // read fresh from the URL every time, never stored, since it represents
+  // one specific scan.
+  function getInsigniaUUID() {
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get('uuid_insignia');
+    return raw && raw.trim() ? raw.trim() : null;
+  }
+
+  const uuidInsignia = getInsigniaUUID();
+
   // ---------- State helpers ----------
   const states = ['state-loading', 'state-error', 'state-join', 'state-collection'];
   function showState(id) {
@@ -376,6 +388,36 @@
     return div.innerHTML;
   }
 
+  // ---------- Award a badge, then render ----------
+  // If the URL carries ?uuid_insignia=, check it's a real badge in
+  // "insignias" and, if so, record the link in "usuarios_isignias"
+  // (keyed by user, then by badge) before showing the collection. That
+  // table — not any field on the user — is the source of truth for which
+  // badges someone has.
+  function awardBadgeIfNeeded(uuid, insigniaId) {
+    if (!insigniaId) return Promise.resolve();
+    return db.ref('insignias/' + insigniaId).once('value')
+      .then(snap => {
+        if (!snap.exists()) return; // unknown badge id, ignore quietly
+        return db.ref('usuarios_isignias/' + uuid + '/' + insigniaId).set(true);
+      })
+      .catch(() => { /* don't block viewing the collection over this */ });
+  }
+
+  function handleUser(uuid, usuario) {
+    awardBadgeIfNeeded(uuid, uuidInsignia).then(() => {
+      // Once the badge has been recorded, drop the query string (uuid and
+      // uuid_insignia) from the visible URL. The uuid is already saved in
+      // localStorage, so nothing is lost — this just keeps it out of the
+      // address bar / browser history.
+      if (uuidInsignia) {
+        const cleanUrl = window.location.pathname + window.location.hash;
+        history.replaceState(null, '', cleanUrl);
+      }
+      renderCollection(uuid, usuario);
+    });
+  }
+
   // ---------- Boot ----------
   if (!uuid) {
     showState('state-error');
@@ -383,7 +425,7 @@
     db.ref('usuarios/' + uuid).once('value')
       .then(snapshot => {
         if (snapshot.exists()) {
-          renderCollection(uuid, snapshot.val());
+          handleUser(uuid, snapshot.val());
         } else {
           showState('state-join');
         }
@@ -422,10 +464,10 @@
     joinBtn.disabled = true;
     joinBtn.textContent = 'Guardando…';
 
-    const nuevoUsuario = { nombre: nombre, insignias: {} };
+    const nuevoUsuario = { nombre: nombre };
 
     db.ref('usuarios/' + uuid).set(nuevoUsuario)
-      .then(() => renderCollection(uuid, nuevoUsuario))
+      .then(() => handleUser(uuid, nuevoUsuario))
       .catch(() => {
         joinError.textContent = 'No se ha podido guardar. Inténtalo de nuevo.';
         joinBtn.disabled = false;
@@ -443,45 +485,49 @@
     document.getElementById('user-title').innerHTML =
       'Hola, <span class="name">' + escapeHtml(usuario.nombre || '') + '</span>';
 
-    const insigniaIds = usuario.insignias ? Object.keys(usuario.insignias) : [];
     const countEl = document.getElementById('badge-count');
     const area = document.getElementById('badge-area');
 
-    if (insigniaIds.length === 0) {
-      countEl.textContent = '';
-      area.innerHTML =
-        '<div class="empty-case">Todavía no tienes insignias. Sigue explorando los stands para conseguir la primera.</div>';
-      showState('state-collection');
-      return;
-    }
+    db.ref('usuarios_isignias/' + uuid).once('value')
+      .then(relSnap => {
+        const relaciones = relSnap.val() || {};
+        const insigniaIds = Object.keys(relaciones);
 
-    countEl.textContent = insigniaIds.length === 1 ? '1 insignia' : insigniaIds.length + ' insignias';
+        if (insigniaIds.length === 0) {
+          countEl.textContent = '';
+          area.innerHTML =
+            '<div class="empty-case">Todavía no tienes insignias. Sigue explorando los stands para conseguir la primera.</div>';
+          showState('state-collection');
+          return;
+        }
 
-    db.ref('insignias').once('value')
-      .then(snap => {
-        const todas = snap.val() || {};
-        const grid = document.createElement('div');
-        grid.className = 'badge-grid';
+        countEl.textContent = insigniaIds.length === 1 ? '1 insignia' : insigniaIds.length + ' insignias';
 
-        insigniaIds.forEach(id => {
-          const info = todas[id] || {};
-          const nombre = info.nombre || id;
-          const icono = info.icono || '🏅';
+        return db.ref('insignias').once('value').then(snap => {
+          const todas = snap.val() || {};
+          const grid = document.createElement('div');
+          grid.className = 'badge-grid';
 
-          const badge = document.createElement('div');
-          badge.className = 'badge';
-          badge.innerHTML =
-            '<div class="badge-medal" title="' + escapeHtml(info.descripcion || nombre) + '">' + icono + '</div>' +
-            '<div class="badge-name">' + escapeHtml(nombre) + '</div>';
-          grid.appendChild(badge);
+          insigniaIds.forEach(id => {
+            const info = todas[id] || {};
+            const nombre = info.nombre || id;
+            const icono = info.icono || '🏅';
+
+            const badge = document.createElement('div');
+            badge.className = 'badge';
+            badge.innerHTML =
+              '<div class="badge-medal" title="' + escapeHtml(info.descripcion || nombre) + '">' + icono + '</div>' +
+              '<div class="badge-name">' + escapeHtml(nombre) + '</div>';
+            grid.appendChild(badge);
+          });
+
+          area.innerHTML = '';
+          area.appendChild(grid);
+          showState('state-collection');
         });
-
-        area.innerHTML = '';
-        area.appendChild(grid);
-        showState('state-collection');
       })
       .catch(() => {
-        area.innerHTML = '<div class="empty-case">No se han podido cargar los detalles de las insignias.</div>';
+        area.innerHTML = '<div class="empty-case">No se han podido cargar tus insignias.</div>';
         showState('state-collection');
       });
   }
