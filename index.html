@@ -302,26 +302,6 @@
     gap: 14px;
   }
 
-  .modal-close-x {
-    position: absolute;
-    top: 12px;
-    right: 16px;
-    background: none;
-    border: none;
-    color: var(--text-dim);
-    font-size: 24px;
-    font-weight: 600;
-    cursor: pointer;
-    line-height: 1;
-    padding: 4px 8px;
-    border-radius: 6px;
-    transition: color 150ms ease, background 150ms ease;
-  }
-  .modal-close-x:hover {
-    color: var(--text);
-    background: rgba(255,255,255,0.05);
-  }
-
   /* Versión grande de la insignia dentro del modal */
   .modal-card .badge-medal {
     width: 110px;
@@ -475,7 +455,6 @@
 <!-- Modal Detalle Insignia -->
 <div class="modal-overlay" id="badge-detail-modal">
   <div class="modal-card">
-    <button type="button" class="modal-close-x" id="modal-badge-x" aria-label="Cerrar">&times;</button>
     <div id="modal-badge-medal"></div>
     <h2 id="modal-badge-title">Nombre de la Insignia</h2>
     <p id="modal-badge-desc">Descripción de la insignia...</p>
@@ -633,7 +612,6 @@
   // ---------- Modal Detalle ----------
   const badgeDetailModal = document.getElementById('badge-detail-modal');
   const modalCloseBtn = document.getElementById('modal-badge-close');
-  const modalXBtn = document.getElementById('modal-badge-x');
 
   function openBadgeDetail(info) {
     const titleEl = document.getElementById('modal-badge-title');
@@ -669,7 +647,6 @@
   }
 
   modalCloseBtn.addEventListener('click', closeBadgeDetail);
-  modalXBtn.addEventListener('click', closeBadgeDetail);
 
   // Cerrar al hacer clic en el fondo oscuro (fuera de la tarjeta)
   badgeDetailModal.addEventListener('click', (e) => {
