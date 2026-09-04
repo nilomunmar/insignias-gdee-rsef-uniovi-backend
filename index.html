@@ -243,10 +243,16 @@
     align-items: center;
     justify-content: center;
     font-size: 30px;
+    overflow: hidden;
     box-shadow:
       0 0 0 3px var(--bg-deep),
       0 0 0 4px var(--panel-border),
       0 8px 16px -6px rgba(217,164,65,.45);
+  }
+  .badge-medal img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
   .panel-footer {
@@ -588,8 +594,26 @@
 
             const badge = document.createElement('div');
             badge.className = 'badge';
-            badge.innerHTML =
-              '<div class="badge-medal" title="' + escapeHtml(info.descripcion || nombre) + '">' + icono + '</div>';
+
+            const medal = document.createElement('div');
+            medal.className = 'badge-medal';
+            medal.title = info.descripcion || nombre;
+
+            if (info.ruta) {
+              const img = document.createElement('img');
+              img.src = info.ruta;
+              img.alt = '';
+              img.loading = 'lazy';
+              img.onerror = function () {
+                img.remove();
+                medal.textContent = icono;
+              };
+              medal.appendChild(img);
+            } else {
+              medal.textContent = icono;
+            }
+
+            badge.appendChild(medal);
             grid.appendChild(badge);
           });
 
