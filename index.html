@@ -329,7 +329,10 @@
   }
 
   /* Add-badge button + scanner */
-  #add-badge-btn { max-width: 280px; margin-left: auto; margin-right: auto; }
+  #add-badge-btn { 
+    max-width: 280px; 
+    margin: 34px auto 0; 
+  }
 
   .scanner-overlay {
     display: none;
@@ -820,7 +823,7 @@
           const results = await barcodeDetector.detect(scanCanvas);
           if (results.length) text = results[0].rawValue;
         } catch (e) { /* keep trying next frame */ }
-      } else if (typeof jsQR === 'function') {
+      } else if (typeof jsQR !== 'function') {
         const imageData = scanCtx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
         const result = jsQR(imageData.data, imageData.width, imageData.height);
         if (result) text = result.data;
