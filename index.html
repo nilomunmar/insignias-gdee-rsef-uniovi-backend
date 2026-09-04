@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Insignias — Acceso por QR</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; max-width:900px; margin:2rem auto; padding:0 1rem; color:#222; }
+    header { display:flex; align-items:center; gap:1rem; margin-bottom:1.5rem; }
+    h1 { margin:0; font-size:1.25rem; }
+    #status { margin-bottom:1rem; color:#555 }
+    .card { border:1px solid #eee; padding:1rem; border-radius:8px; background:#fafafa; }
+    .hidden { display:none; }
+    label { display:block; margin-bottom:.25rem; font-weight:600; }
+    input[type="text"] { width:100%; padding:.5rem; font-size:1rem; margin-bottom:.5rem; box-sizing:border-box; }
+    button { padding:.5rem 1rem; font-size:1rem; border-radius:6px; border: none; background:#0366d6; color:white; cursor:pointer; }
+    #badges { display:flex; gap:1rem; flex-wrap:wrap; margin-top:1rem; }
+    .badge { width:150px; border:1px solid #ddd; padding:.5rem; border-radius:8px; text-align:center; background:white; }
+    .badge img { width:96px; height:96px; object-fit:contain; display:block; margin:0 auto .5rem;}
+    .small { font-size:.9rem; color:#666; }
+    #qr img { max-width:200px; }
+    footer { margin-top:2rem; font-size:.9rem; color:#666; }
+  </style>
+  <!-- Firebase JS (compat version for simpler Realtime DB code) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Insignias — Acceso por QR</h1>
+  </header>
+
+  <div id="status" class="small">Cargando...</div>
+
+  <div id="join" class="card hidden">
+    <div id="join-message" class="small">No se ha encontrado un usuario para este código. Únete introduciendo tu nombre:</div>
+    <label for="name">Nombre</label>
+    <input id="name" type="text" placeholder="Tu nombre completo" />
+    <button id="join-btn">Unirme</button>
+    <div id="qr" style="margin-top:1rem;"></div>
+  </div>
+
+  <div id="profile" class="card hidden">
+    <div><strong id="display-name"></strong></div>
+    <div class="small" id="joined-at"></div>
+    <div id="badges"></div>
+    <div style="margin-top:1rem;">
+      <button id="show-qr">Mostrar/Actualizar QR de esta URL</button>
+      <div id="qr-profile" style="margin-top:.75rem;"></div>
+    </div>
+  </div>
+
+  <footer>
+    Consejo: para usar con QR genera un QR que apunte a la URL exacta: <span id="example-url" style="word-break:break-all"></span>
+  </footer>
+
+<script>
+  // --- Configuración Firebase (usa la que has dado) ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyB_PGWy13_8FK--jHlqXN65mWKq0nqzDds",
+    authDomain: "insignias-gdee-uniovi.firebaseapp.com",
+    databaseURL: "https://insignias-gdee-uniovi-default-rtdb.europe-west1.firebasedatabase.app/",
+    projectId: "insignias-gdee-uniovi",
+    storageBucket: "insignias-gdee-uniovi.firebasestorage.app",
+    messagingSenderId: "748330072664",
+    appId: "1:748330072664:web:7df4c9e6c5b345dcec682d"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  // Helpers DOM
+  const statusEl = document.getElementById('status');
+  const joinEl = document.getElementById('join');
+  const profileEl = document.getElementById('profile');
+  const displayNameEl = document.getElementById('display-name');
+  const joinedAtEl = document.getElementById('joined-at');
+  const badgesEl = document.getElementById('badges');
+  const nameInput = document.getElementById('name');
+  const joinBtn = document.getElementById('join-btn');
+  const qrEl = document.getElementById('qr');
+  const qrProfileEl = document.getElementById('qr-profile');
+  const exampleUrlEl = document.getElementById('example-url');
+  const showQrBtn = document.getElementById('show-qr');
+
+  function getUuidFromPath() {
+    const path = window.location.pathname || '';
+    // Intentar capturar index.html/uuid
+    let m = path.match(/index\.html\/([^\/?#]+)/);
+    if (m) return decodeURIComponent(m[1]);
+    // Si no, tomar la última parte del path (por ejemplo /uuid o /index.html#/uuid)
+    const parts = path.split('/').filter(Boolean);
+    if (parts.length) {
+      const last = parts[parts.length - 1];
+      // Evitar que sea "index.html"
+      if (last !== 'index.html') return decodeURIComponent(last);
+    }
+    // Try hash-style (index.html#/uuid)
+    if (location.hash && location.hash.length > 1) {
+      return decodeURIComponent(location.hash.replace(/^#\/?/, ''));
+    }
+    return null;
+  }
+
+  const uuid = getUuidFromPath();
+  const pageUrl = window.location.origin + window.location.pathname + (window.location.pathname.endsWith('/') ? '' : '') ;
+  // Build example URL with uuid
+  const exampleFullUrl = window.location.origin + window.location.pathname.replace(/\/?$/, '/') + (uuid || '{uuid}');
+  exampleUrlEl.textContent = exampleFullUrl;
+
+  if (!uuid) {
+    statusEl.textContent = "No se encontró uuid en la URL. Usa una URL como: " + exampleFullUrl;
+    joinEl.classList.remove('hidden');
+    qrEl.innerHTML = '<div class="small">Puedes generar un uuid en JS con <code>crypto.randomUUID()</code> y añadirlo a la URL; luego crear un QR con esa URL.</div>';
+  } else {
+    statusEl.textContent = "Código: " + uuid + " — comprobando en Firebase...";
+    // comprobar existencia del usuario
+    const userRef = db.ref('usuarios/' + uuid);
+    userRef.once('value').then(snap => {
+      if (snap.exists()) {
+        const user = snap.val();
+        showProfile(user);
+      } else {
+        // mostrar formulario de join
+        statusEl.textContent = "Usuario no encontrado. Puedes unirte rellenando el formulario.";
+        joinEl.classList.remove('hidden');
+        // mostrar QR con la URL completa para compartir
+        renderQrFor(window.location.href, qrEl);
+      }
+    }).catch(err => {
+      statusEl.textContent = "Error al conectarse a Firebase: " + err.message;
+      console.error(err);
+    });
+  }
+
+  // Al pulsar Unirme: crear usuario en /usuarios/{uuid}
+  joinBtn.addEventListener('click', () => {
+    const nombre = nameInput.value && nameInput.value.trim();
+    if (!nombre) {
+      alert('Introduce un nombre.');
+      return;
+    }
+    const userData = {
+      nombre,
+      createdAt: Date.now()
+    };
+    statusEl.textContent = 'Creando usuario...';
+    db.ref('usuarios/' + uuid).set(userData)
+      .then(() => {
+        statusEl.textContent = 'Usuario creado.';
+        joinEl.classList.add('hidden');
+        showProfile(userData);
+      })
+      .catch(err => {
+        statusEl.textContent = 'Error guardando usuario: ' + err.message;
+        console.error(err);
+      });
+  });
+
+  showQrBtn.addEventListener('click', () => {
+    renderQrFor(window.location.href, qrProfileEl);
+  });
+
+  function showProfile(user) {
+    joinEl.classList.add('hidden');
+    profileEl.classList.remove('hidden');
+    displayNameEl.textContent = user.nombre || user.name || 'Sin nombre';
+    if (user.createdAt) {
+      const d = new Date(user.createdAt);
+      joinedAtEl.textContent = 'Se unió: ' + d.toLocaleString();
+    } else {
+      joinedAtEl.textContent = '';
+    }
+    statusEl.textContent = 'Usuario encontrado. Cargando insignias...';
+    badgesEl.innerHTML = '';
+
+    // 1) Si en usuario hay un campo insignias (lista/obj) usarlo:
+    const userIns = user.insignias;
+    if (userIns) {
+      // userIns puede ser array o objeto con claves
+      const ids = Array.isArray(userIns) ? userIns : Object.keys(userIns);
+      if (ids.length === 0) {
+        statusEl.textContent = 'No tiene insignias.';
+      } else {
+        // cargar cada insignia
+        const promises = ids.map(id => db.ref('insignias/' + id).once('value').then(s => ({ id, snap: s })));
+        Promise.all(promises).then(results => {
+          const found = results.filter(r => r.snap.exists()).map(r => ({ id: r.id, data: r.snap.val() }));
+          renderBadges(found);
+          statusEl.textContent = 'Insignias cargadas.';
+        }).catch(err => {
+          statusEl.textContent = 'Error cargando insignias: ' + err.message;
+          console.error(err);
+        });
+      }
+    } else {
+      // 2) Si no hay lista en usuario, buscar entre todas las insignias aquellas relacionadas con este usuario
+      db.ref('insignias').once('value').then(snap => {
+        const out = [];
+        snap.forEach(child => {
+          const val = child.val();
+          // Dos patrones comunes:
+          // a) insignia.usuarios es objeto con claves de uuid true
+          // b) insignia.usuarios es array con uuids
+          if (val) {
+            if (val.usuarios) {
+              // objeto o array
+              if (Array.isArray(val.usuarios)) {
+                if (val.usuarios.includes(uuid)) out.push({ id: child.key, data: val });
+              } else if (typeof val.usuarios === 'object') {
+                if (val.usuarios[uuid]) out.push({ id: child.key, data: val });
+              }
+            }
+            // c) otra posible relación: campo usuarioId igual uuid
+            if (val.usuarioId && val.usuarioId === uuid) {
+              // evitar duplicado
+              if (!out.some(o => o.id === child.key)) out.push({ id: child.key, data: val });
+            }
+          }
+        });
+        if (out.length === 0) {
+          statusEl.textContent = 'No tiene insignias relacionadas.';
+        } else {
+          renderBadges(out);
+          statusEl.textContent = 'Insignias cargadas.';
+        }
+      }).catch(err => {
+        statusEl.textContent = 'Error leyendo insignias: ' + err.message;
+        console.error(err);
+      });
+    }
+
+    // Mostrar QR para compartir esta URL
+    renderQrFor(window.location.href, qrProfileEl);
+  }
+
+  function renderBadges(list) {
+    badgesEl.innerHTML = '';
+    list.forEach(item => {
+      const d = item.data || {};
+      const el = document.createElement('div');
+      el.className = 'badge';
+      const imgSrc = d.image || d.icon || d.url || '';
+      if (imgSrc) {
+        const img = document.createElement('img');
+        img.src = imgSrc;
+        img.alt = d.nombre || d.name || 'insignia';
+        el.appendChild(img);
+      }
+      const title = document.createElement('div');
+      title.textContent = d.nombre || d.title || d.name || ('Insignia ' + item.id);
+      el.appendChild(title);
+      if (d.descripcion) {
+        const desc = document.createElement('div');
+        desc.className = 'small';
+        desc.textContent = d.descripcion;
+        el.appendChild(desc);
+      }
+      badgesEl.appendChild(el);
+    });
+  }
+
+  // Genera un <img> con un QR (usando Google Chart API, sin librerías)
+  function renderQrFor(url, container) {
+    const encoded = encodeURIComponent(url);
+    // chs puede ajustarse
+    const qrUrl = 'https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=' + encoded;
+    container.innerHTML = '<div class="small">QR para: <br/><code style="word-break:break-all;">' + url + '</code></div><img src="' + qrUrl + '" alt="QR" />';
+  }
+</script>
+</body>
+</html>
