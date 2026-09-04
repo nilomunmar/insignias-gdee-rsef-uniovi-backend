@@ -339,11 +339,27 @@
   const db = firebase.database();
 
   // ---------- UUID extraction ----------
-  // The QR code points at .../index.html?uuid=<uuid>
+  // The QR code points at .../index.html?uuid=<uuid>.
+  // Once we see a uuid in the URL we remember it in localStorage, so a
+  // person can come back later (bookmark, home screen, etc.) without the
+  // query param and still land on their own collection.
+  const STORAGE_KEY = 'usuario_uuid';
+
   function getUUID() {
     const params = new URLSearchParams(window.location.search);
-    const raw = params.get('uuid');
-    return raw ? raw.trim() : null;
+    const fromUrl = params.get('uuid');
+    if (fromUrl && fromUrl.trim()) {
+      const trimmed = fromUrl.trim();
+      try { localStorage.setItem(STORAGE_KEY, trimmed); } catch (e) { /* storage unavailable */ }
+      return trimmed;
+    }
+
+    try {
+      const fromStorage = localStorage.getItem(STORAGE_KEY);
+      if (fromStorage && fromStorage.trim()) return fromStorage.trim();
+    } catch (e) { /* storage unavailable */ }
+
+    return null;
   }
 
   const uuid = getUUID();
