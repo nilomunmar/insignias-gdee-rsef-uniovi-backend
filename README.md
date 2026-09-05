@@ -1,0 +1,1 @@
+El panel de administración no está subido a este repositorio por razones de seguridad. Es un archivo .html que funciona perfectamente en local, así que por favor que nadie lo suba al repositorio. Si lo necesitas mándame un correo a nilomunmar@gmail.com
