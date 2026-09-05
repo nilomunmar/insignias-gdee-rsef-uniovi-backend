@@ -9,16 +9,16 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg: #0e1a2b;
-    --bg-deep: #091220;
-    --panel: #142640;
-    --panel-border: #23405f;
-    --gold: #d9a441;
-    --gold-deep: #b9862b;
-    --teal: #5fa8a0;
-    --text: #ede7d8;
-    --text-dim: #93a5ba;
-    --danger: #d97a6a;
+    --bg: #e7d6bc;
+    --bg-deep: #d8c09a;
+    --panel: #f5ebda;
+    --panel-border: #c7a57a;
+    --gold: #8b5a2b;
+    --gold-deep: #6b4420;
+    --teal: #7c9a82;
+    --text: #3b2712;
+    --text-dim: #7a6248;
+    --danger: #b24c3d;
     --radius-badge: 50%;
     --radius-panel: 18px;
   }
@@ -30,7 +30,7 @@
     padding: 0;
     min-height: 100%;
     background:
-      radial-gradient(circle at 50% -10%, #17304d 0%, var(--bg) 55%, var(--bg-deep) 100%);
+      radial-gradient(circle at 50% -10%, #f8efde 0%, var(--bg) 55%, var(--bg-deep) 100%);
     color: var(--text);
     font-family: 'Inter', system-ui, sans-serif;
     line-height: 1.5;
@@ -60,21 +60,6 @@
     position: relative;
   }
 
-  .emblem {
-    width: 100px;
-    height: 100px;
-    margin: 0 auto 20px;
-    position: relative;
-    animation: emblem-in 900ms cubic-bezier(.2,.8,.2,1) both;
-  }
-
-  @keyframes emblem-in {
-    from { opacity: 0; transform: scale(.7) rotate(-8deg); }
-    to   { opacity: 1; transform: scale(1) rotate(0); }
-  }
-
-  .emblem svg { width: 100%; height: 100%; }
-
   .eyebrow-line {
     font-size: 15px;
     color: var(--text-dim);
@@ -100,7 +85,7 @@
 
   /* ---------- Panel ---------- */
   .panel {
-    background: linear-gradient(180deg, var(--panel) 0%, #10203a 100%);
+    background: linear-gradient(180deg, var(--panel) 0%, #e9d7b4 100%);
     border: 1px solid var(--panel-border);
     border-radius: var(--radius-panel);
     padding: 28px 24px;
@@ -170,9 +155,9 @@
   }
   input[type="text"]:focus {
     border-color: var(--gold);
-    box-shadow: 0 0 0 3px rgba(217,164,65,.18);
+    box-shadow: 0 0 0 3px rgba(139,90,43,.18);
   }
-  input[type="text"]::placeholder { color: #5c6f85; }
+  input[type="text"]::placeholder { color: #9c8360; }
 
   .btn {
     display: block;
@@ -182,12 +167,12 @@
     border: none;
     border-radius: 10px;
     background: linear-gradient(180deg, var(--gold) 0%, var(--gold-deep) 100%);
-    color: #24160a;
+    color: #fbf2e4;
     font-family: 'Inter', sans-serif;
     font-weight: 600;
     font-size: 15px;
     cursor: pointer;
-    transition: transform 120ms ease, filter 150ms ease;
+    transition: transform 120ms ease, filter 150ms ease, background 200ms ease, border-color 200ms ease;
   }
   .btn:hover { filter: brightness(1.06); }
   .btn:active { transform: scale(.98); }
@@ -220,10 +205,54 @@
     font-size: 14.5px;
   }
 
+  /* Recuadros por Rareza */
+  .rarity-box {
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 18px;
+    border: 1.5px solid transparent;
+  }
+  .rarity-box:last-child { margin-bottom: 0; }
+
+  .rarity-title {
+    font-family: 'Fraunces', serif;
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    text-align: center;
+  }
+
+  /* Colores de Recuadros */
+  .rarity-bronce {
+    background: linear-gradient(135deg, rgba(168, 102, 50, 0.12) 0%, rgba(139, 74, 28, 0.22) 100%);
+    border-color: #aa6b3c;
+  }
+  .rarity-bronce .rarity-title { color: #82441a; }
+
+  .rarity-plata {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0%, rgba(200, 210, 220, 0.4) 100%);
+    border-color: #9ca3af;
+  }
+  .rarity-plata .rarity-title { color: #374151; }
+
+  .rarity-oro {
+    background: linear-gradient(135deg, rgba(220, 175, 75, 0.2) 0%, rgba(185, 135, 40, 0.3) 100%);
+    border-color: #d49f38;
+  }
+  .rarity-oro .rarity-title { color: #876008; }
+
+  .rarity-platino {
+    background: linear-gradient(135deg, rgba(224, 242, 254, 0.5) 0%, rgba(186, 230, 253, 0.35) 100%);
+    border-color: #38bdf8;
+  }
+  .rarity-platino .rarity-title { color: #0369a1; }
+
   .badge-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 22px 14px;
+    gap: 16px 12px;
   }
 
   .badge {
@@ -239,20 +268,17 @@
     transform: scale(1.05);
   }
 
+  /* Base para medallas */
   .badge-medal {
-    width: 74px;
-    height: 74px;
+    width: 68px;
+    height: 68px;
     border-radius: var(--radius-badge);
-    background: radial-gradient(circle at 35% 30%, #f0c876 0%, var(--gold) 45%, var(--gold-deep) 100%);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 30px;
+    font-size: 28px;
     overflow: hidden;
-    box-shadow:
-      0 0 0 3px var(--bg-deep),
-      0 0 0 4px var(--panel-border),
-      0 8px 16px -6px rgba(217,164,65,.45);
+    transition: background 200ms ease, box-shadow 200ms ease;
   }
   .badge-medal img {
     width: 100%;
@@ -260,18 +286,60 @@
     object-fit: cover;
   }
 
+  /* Marco y fondo de la insignia según su rareza */
+  .badge-medal.rarity-bronce {
+    background: radial-gradient(circle at 35% 30%, #e8a87c 0%, #aa6b3c 50%, #6e3f19 100%);
+    box-shadow:
+      0 0 0 3px var(--bg-deep),
+      0 0 0 5px #aa6b3c,
+      0 8px 16px -6px rgba(110, 63, 25, .5);
+  }
+
+  .badge-medal.rarity-plata {
+    background: radial-gradient(circle at 35% 25%, #ffffff 0%, #e2e8f0 35%, #94a3b8 70%, #475569 100%);
+    box-shadow:
+      0 0 0 3px var(--bg-deep),
+      0 0 0 5px #94a3b8,
+      0 8px 18px -4px rgba(71, 85, 105, 0.45);
+  }
+
+  .badge-medal.rarity-oro {
+    background: radial-gradient(circle at 35% 30%, #fff1b0 0%, #d8b84f 50%, #876008 100%);
+    box-shadow:
+      0 0 0 3px var(--bg-deep),
+      0 0 0 5px #d49f38,
+      0 8px 16px -6px rgba(135, 96, 8, .5);
+  }
+
+  .badge-medal.rarity-platino {
+    background: radial-gradient(circle at 35% 25%, #ffffff 0%, #e0f2fe 30%, #38bdf8 68%, #0369a1 100%);
+    box-shadow:
+      0 0 0 3px var(--bg-deep),
+      0 0 0 5px #38bdf8,
+      0 0 12px rgba(56, 189, 248, 0.45),
+      0 8px 18px -4px rgba(3, 105, 161, 0.5);
+  }
+
   .panel-footer {
     text-align: center;
     margin-top: 26px;
     font-size: 12.5px;
-    color: #5c6f85;
+    color: #9c8360;
   }
 
-  /* ---------- Modal Estilizado ---------- */
+  .footer-logo {
+    display: block;
+    width: 42%;
+    max-width: 170px;
+    margin: 30px 120px 0 120px;
+    opacity: .85;
+  }
+
+  /* ---------- Modal Detalle Insignia ---------- */
   .modal-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(9, 18, 32, 0.85);
+    background: rgba(59, 39, 18, 0.96);
     backdrop-filter: blur(4px);
     display: flex;
     align-items: center;
@@ -288,8 +356,8 @@
   }
   .modal-card {
     position: relative;
-    background: linear-gradient(180deg, var(--panel) 0%, #10203a 100%);
-    border: 1px solid var(--panel-border);
+    background: linear-gradient(180deg, var(--panel) 0%, #e9d7b4 100%);
+    border: 1.5px solid var(--panel-border);
     border-radius: var(--radius-panel);
     padding: 32px 24px 28px;
     width: 100%;
@@ -300,17 +368,13 @@
     flex-direction: column;
     align-items: center;
     gap: 14px;
+    transition: background 200ms ease, border-color 200ms ease;
   }
 
-  /* Versión grande de la insignia dentro del modal */
   .modal-card .badge-medal {
     width: 110px;
     height: 110px;
     font-size: 48px;
-    box-shadow:
-      0 0 0 4px var(--bg-deep),
-      0 0 0 6px var(--panel-border),
-      0 12px 24px -6px rgba(217,164,65,.5);
   }
 
   .modal-card h2 {
@@ -328,17 +392,14 @@
     word-break: break-word;
   }
 
-  /* Add-badge button + scanner */
-  #add-badge-btn { 
-    max-width: 280px; 
-    margin: 84px auto 0; 
-  }
+  /* Scanner & Add Badge */
+  #add-badge-btn { max-width: 280px; margin-left: auto; margin-right: auto; margin-top: 20px; }
 
   .scanner-overlay {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(6,12,22,.92);
+    background: rgba(26,17,10,.92);
     z-index: 100;
     align-items: center;
     justify-content: center;
@@ -357,7 +418,7 @@
     aspect-ratio: 1 / 1;
     border-radius: var(--radius-panel);
     overflow: hidden;
-    background: #000;
+    background: #1a110a;
     box-shadow: 0 0 0 1px var(--panel-border);
   }
   .scanner-video-wrap video {
@@ -370,7 +431,7 @@
     inset: 14%;
     border: 2px solid var(--gold);
     border-radius: 16px;
-    box-shadow: 0 0 0 2000px rgba(6,12,22,.35);
+    box-shadow: 0 0 0 2000px rgba(26,17,10,.35);
     pointer-events: none;
   }
   .scanner-status {
@@ -394,6 +455,69 @@
     cursor: pointer;
   }
   .scanner-cancel:hover { border-color: var(--teal); }
+
+  /* Estilos del Modal por Rareza */
+  #badge-detail-modal .modal-card.rarity-bronce {
+    background: linear-gradient(180deg, #76502f 0%, #51351f 100%);
+    border-color: #c18a55;
+    color: #f1d6b4;
+  }
+  #badge-detail-modal .modal-card.rarity-plata {
+    background: linear-gradient(180deg, #4b5563 0%, #374151 100%);
+    border-color: #9ca3af;
+    color: #f9fafb;
+  }
+  #badge-detail-modal .modal-card.rarity-oro {
+    background: linear-gradient(180deg, #96752a 0%, #68500f 100%);
+    border-color: #e5c45a;
+    color: #fff3b8;
+  }
+  #badge-detail-modal .modal-card.rarity-platino {
+    background: linear-gradient(180deg, #0369a1 0%, #0c4a6e 100%);
+    border-color: #38bdf8;
+    color: #f0f9ff;
+  }
+
+  #badge-detail-modal .modal-card.rarity-bronce h2,
+  #badge-detail-modal .modal-card.rarity-plata h2,
+  #badge-detail-modal .modal-card.rarity-oro h2,
+  #badge-detail-modal .modal-card.rarity-platino h2,
+  #badge-detail-modal .modal-card.rarity-bronce p,
+  #badge-detail-modal .modal-card.rarity-plata p,
+  #badge-detail-modal .modal-card.rarity-oro p,
+  #badge-detail-modal .modal-card.rarity-platino p {
+    color: inherit;
+    opacity: 1;
+    text-shadow: 0 1px 2px rgba(0,0,0,.3);
+  }
+
+  /* Estilos del Botón "Cerrar" según Rareza */
+  #badge-detail-modal .modal-card.rarity-bronce #modal-badge-close {
+    background: linear-gradient(180deg, #aa6b3c 0%, #7c441c 100%);
+    color: #fbf2e4;
+    border: 1px solid #c18a55;
+  }
+
+  #badge-detail-modal .modal-card.rarity-plata #modal-badge-close {
+    background: linear-gradient(180deg, #f8fafc 0%, #cbd5e1 100%);
+    color: #0f172a;
+    border: 1px solid #ffffff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  }
+
+  #badge-detail-modal .modal-card.rarity-oro #modal-badge-close {
+    background: linear-gradient(180deg, #fef08a 0%, #d97706 100%);
+    color: #3b1a03;
+    border: 1px solid #fef3c7;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  }
+
+  #badge-detail-modal .modal-card.rarity-platino #modal-badge-close {
+    background: linear-gradient(180deg, #e0f2fe 0%, #38bdf8 100%);
+    color: #032b45;
+    border: 1px solid #bae6fd;
+    box-shadow: 0 2px 10px rgba(56, 189, 248, 0.35);
+  }
 </style>
 </head>
 <body>
@@ -402,14 +526,6 @@
   <div class="stage">
 
     <div class="hero">
-      <div class="emblem" aria-hidden="true">
-        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="50" cy="50" r="46" fill="none" stroke="#23405f" stroke-width="1.5"/>
-          <ellipse cx="50" cy="50" rx="44" ry="18" fill="none" stroke="#5fa8a0" stroke-width="1.6" transform="rotate(20 50 50)"/>
-          <ellipse cx="50" cy="50" rx="44" ry="18" fill="none" stroke="#5fa8a0" stroke-width="1.6" transform="rotate(100 50 50)" opacity="0.6"/>
-          <circle cx="50" cy="50" r="7" fill="#d9a441"/>
-        </svg>
-      </div>
       <h1 id="hero-title">Tu colección de insignias</h1>
       <p class="eyebrow-line" id="hero-sub">Un proyecto del GDEE, la Real Sociedad Española de Física y la Universidad de Oviedo.</p>
     </div>
@@ -428,13 +544,13 @@
           <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.6"/>
           <path d="M9 9L15 15M15 9L9 15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
         </svg>
-        <p>No hemos encontrado tu código. Escanea el QR de nuevo para acceder a tu colección de insignias.</p>
+        <p id="state-error-msg">No hemos encontrado tu código. Escanea el QR de nuevo para acceder a tu colección de insignias.</p>
       </div>
 
       <!-- New user: join form -->
       <div class="state" id="state-join">
         <label class="field-label" for="nombre-input">¿Cómo te llamas?</label>
-        <input type="text" id="nombre-input" placeholder="Tu nombre" maxlength="60" autocomplete="name">
+        <input type="text" id="nombre-input" placeholder="Tu nombre" maxlength="32" autocomplete="name">
         <button class="btn" id="join-btn">Unirme a la colección</button>
         <p class="form-error" id="join-error"></p>
       </div>
@@ -451,7 +567,7 @@
 
     </div>
 
-    <p class="panel-footer">GDEE &middot; RSEF &middot; Universidad de Oviedo</p>
+    <img class="footer-logo" src="logo-gdee-marron.png" alt="Grupo de Estudiantes · Real Sociedad Española de Física">
   </div>
 </div>
 
@@ -493,22 +609,30 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
-  // ---------- UUID extraction ----------
   const STORAGE_KEY = 'uuid_usuario';
+  const EMPTY_NAME_PLACEHOLDER = 'NOMBRE-A-RELLENAR-POR-EL-USUARIO';
+  function esNombreVacio(nombre) {
+    return !nombre || !nombre.trim() || nombre === EMPTY_NAME_PLACEHOLDER;
+  }
+
+  const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  function isValidUUID(str) {
+    return typeof str === 'string' && UUID_REGEX.test(str.trim());
+  }
 
   function getUUID() {
     const params = new URLSearchParams(window.location.search);
     const fromUrl = params.get('uuid');
-    if (fromUrl && fromUrl.trim()) {
+    if (fromUrl && isValidUUID(fromUrl)) {
       const trimmed = fromUrl.trim();
-      try { localStorage.setItem(STORAGE_KEY, trimmed); } catch (e) { /* storage unavailable */ }
+      try { localStorage.setItem(STORAGE_KEY, trimmed); } catch (e) { }
       return trimmed;
     }
 
     try {
       const fromStorage = localStorage.getItem(STORAGE_KEY);
-      if (fromStorage && fromStorage.trim()) return fromStorage.trim();
-    } catch (e) { /* storage unavailable */ }
+      if (fromStorage && isValidUUID(fromStorage)) return fromStorage.trim();
+    } catch (e) { }
 
     return null;
   }
@@ -518,7 +642,7 @@
   function getInsigniaUUID() {
     const params = new URLSearchParams(window.location.search);
     const raw = params.get('uuid_insignia');
-    return raw && raw.trim() ? raw.trim() : null;
+    return raw && isValidUUID(raw) ? raw.trim() : null;
   }
 
   const uuidInsignia = getInsigniaUUID();
@@ -555,14 +679,24 @@
     });
   }
 
-  // ---------- Boot ----------
-  if (!uuid) {
+  function showInvalidCode() {
+    document.getElementById('state-error-msg').textContent =
+      'Este código no es válido. Escanea un QR oficial para ver tu colección de insignias.';
     showState('state-error');
+  }
+
+  if (!uuid) {
+    showInvalidCode();
   } else {
     db.ref('usuarios/' + uuid).once('value')
       .then(snapshot => {
-        if (snapshot.exists()) {
-          handleUser(uuid, snapshot.val());
+        if (!snapshot.exists()) {
+          showInvalidCode();
+          return;
+        }
+        const usuario = snapshot.val() || {};
+        if (!esNombreVacio(usuario.nombre)) {
+          handleUser(uuid, usuario);
         } else {
           showState('state-join');
         }
@@ -571,7 +705,7 @@
         document.getElementById('hero-sub').textContent =
           'No hemos podido conectar con la base de datos. Comprueba tu conexión e inténtalo de nuevo.';
         showState('state-error');
-        document.getElementById('state-error').querySelector('p').textContent =
+        document.getElementById('state-error-msg').textContent =
           'No hemos podido conectar con la base de datos. Recarga la página para volver a intentarlo.';
       });
   }
@@ -593,7 +727,7 @@
       nombreInput.focus();
       return;
     }
-    if (nombre.length > 60) {
+    if (nombre.length > 32) {
       joinError.textContent = 'El nombre es demasiado largo.';
       return;
     }
@@ -601,10 +735,8 @@
     joinBtn.disabled = true;
     joinBtn.textContent = 'Guardando…';
 
-    const nuevoUsuario = { nombre: nombre };
-
-    db.ref('usuarios/' + uuid).set(nuevoUsuario)
-      .then(() => handleUser(uuid, nuevoUsuario))
+    db.ref('usuarios/' + uuid).update({ nombre: nombre })
+      .then(() => handleUser(uuid, { nombre: nombre }))
       .catch(() => {
         joinError.textContent = 'No se ha podido guardar. Inténtalo de nuevo.';
         joinBtn.disabled = false;
@@ -624,10 +756,16 @@
     titleEl.textContent = info.nombre || 'Insignia';
     descEl.textContent = info.descripcion || 'Esta insignia no tiene descripción asignada.';
 
+    const rarezasValidas = ['Bronce', 'Plata', 'Oro', 'Platino'];
+    const rareza = rarezasValidas.includes(info.rareza) ? info.rareza : 'Bronce';
+    badgeDetailModal.classList.remove('rarity-bronce', 'rarity-plata', 'rarity-oro', 'rarity-platino');
+    badgeDetailModal.querySelector('.modal-card').classList.remove('rarity-bronce', 'rarity-plata', 'rarity-oro', 'rarity-platino');
+    badgeDetailModal.querySelector('.modal-card').classList.add('rarity-' + rareza.toLowerCase());
+
     medalContainer.innerHTML = '';
     const medal = document.createElement('div');
-    medal.className = 'badge-medal';
-    
+    medal.className = 'badge-medal rarity-' + rareza.toLowerCase();
+
     if (info.ruta) {
       const img = document.createElement('img');
       img.src = encodeURI(info.ruta);
@@ -651,14 +789,13 @@
 
   modalCloseBtn.addEventListener('click', closeBadgeDetail);
 
-  // Cerrar al hacer clic en el fondo oscuro (fuera de la tarjeta)
   badgeDetailModal.addEventListener('click', (e) => {
     if (e.target === badgeDetailModal) {
       closeBadgeDetail();
     }
   });
 
-  // ---------- Render collection ----------
+  // ---------- Render collection segregada por Rareza ----------
   let currentUsuario = null;
 
   function renderCollection(uuid, usuario) {
@@ -666,7 +803,6 @@
     document.getElementById('hero-title').textContent = '';
     document.getElementById('hero-title').style.display = 'none';
     document.getElementById('hero-sub').style.display = 'none';
-    document.querySelector('.emblem').style.display = 'none';
 
     document.getElementById('user-title').innerHTML =
       'Hola, <span class="name">' + escapeHtml(usuario.nombre || '') + '</span>';
@@ -691,44 +827,67 @@
 
         return db.ref('insignias').once('value').then(snap => {
           const todas = snap.val() || {};
-          const grid = document.createElement('div');
-          grid.className = 'badge-grid';
+          
+          const rarezas = ['Bronce', 'Plata', 'Oro', 'Platino'];
+          const grupos = { Bronce: [], Plata: [], Oro: [], Platino: [] };
 
           insigniaIds.forEach(id => {
             const info = todas[id] || {};
-            const nombre = info.nombre || id;
-            const icono = info.icono || '🏅';
-
-            const badge = document.createElement('div');
-            badge.className = 'badge';
-
-            const medal = document.createElement('div');
-            medal.className = 'badge-medal';
-
-            if (info.ruta) {
-              const img = document.createElement('img');
-              img.src = encodeURI(info.ruta);
-              img.alt = '';
-              img.loading = 'lazy';
-              img.onerror = function () {
-                img.remove();
-                medal.textContent = icono;
-              };
-              medal.appendChild(img);
-            } else {
-              medal.textContent = icono;
-            }
-
-            badge.appendChild(medal);
-            
-            // Evento para abrir el modal
-            badge.addEventListener('click', () => openBadgeDetail(info));
-
-            grid.appendChild(badge);
+            const rareza = info.rareza && grupos[info.rareza] ? info.rareza : 'Bronce';
+            grupos[rareza].push({ id, info });
           });
 
           area.innerHTML = '';
-          area.appendChild(grid);
+
+          rarezas.forEach(rareza => {
+            const lista = grupos[rareza];
+            if (lista.length === 0) return;
+
+            const rarityBox = document.createElement('div');
+            rarityBox.className = 'rarity-box rarity-' + rareza.toLowerCase();
+
+            const title = document.createElement('h3');
+            title.className = 'rarity-title';
+            title.textContent = rareza;
+            rarityBox.appendChild(title);
+
+            const grid = document.createElement('div');
+            grid.className = 'badge-grid';
+
+            lista.forEach(({ id, info }) => {
+              const nombre = info.nombre || id;
+              const icono = info.icono || '🏅';
+
+              const badge = document.createElement('div');
+              badge.className = 'badge';
+
+              const medal = document.createElement('div');
+              medal.className = 'badge-medal rarity-' + rareza.toLowerCase();
+              medal.title = info.descripcion || nombre;
+
+              if (info.ruta) {
+                const img = document.createElement('img');
+                img.src = encodeURI(info.ruta);
+                img.alt = '';
+                img.loading = 'lazy';
+                img.onerror = function () {
+                  img.remove();
+                  medal.textContent = icono;
+                };
+                medal.appendChild(img);
+              } else {
+                medal.textContent = icono;
+              }
+
+              badge.appendChild(medal);
+              badge.addEventListener('click', () => openBadgeDetail(info));
+              grid.appendChild(badge);
+            });
+
+            rarityBox.appendChild(grid);
+            area.appendChild(rarityBox);
+          });
+
           showState('state-collection');
         });
       })
@@ -763,10 +922,10 @@
     try {
       const url = new URL(text);
       const fromParam = url.searchParams.get('uuid_insignia');
-      if (fromParam && fromParam.trim()) return fromParam.trim();
+      if (fromParam && isValidUUID(fromParam)) return fromParam.trim();
       return null;
     } catch (e) {
-      return text;
+      return isValidUUID(text) ? text : null;
     }
   }
 
@@ -822,7 +981,7 @@
         try {
           const results = await barcodeDetector.detect(scanCanvas);
           if (results.length) text = results[0].rawValue;
-        } catch (e) { /* keep trying next frame */ }
+        } catch (e) { }
       } else if (typeof jsQR !== 'function') {
         const imageData = scanCtx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
         const result = jsQR(imageData.data, imageData.width, imageData.height);
