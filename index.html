@@ -795,7 +795,7 @@
     }
   });
 
-  // ---------- Render collection segregada por Rareza ----------
+  // ---------- Render collection segregada por Rareza (Orden Invertido) ----------
   let currentUsuario = null;
 
   function renderCollection(uuid, usuario) {
@@ -828,8 +828,9 @@
         return db.ref('insignias').once('value').then(snap => {
           const todas = snap.val() || {};
           
-          const rarezas = ['Bronce', 'Plata', 'Oro', 'Platino'];
-          const grupos = { Bronce: [], Plata: [], Oro: [], Platino: [] };
+          /* Orden invertido: de Platino a Bronce */
+          const rarezas = ['Platino', 'Oro', 'Plata', 'Bronce'];
+          const grupos = { Platino: [], Oro: [], Plata: [], Bronce: [] };
 
           insigniaIds.forEach(id => {
             const info = todas[id] || {};
