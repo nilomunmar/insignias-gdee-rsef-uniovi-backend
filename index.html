@@ -972,19 +972,31 @@
     if (!scanning) return;
 
     if (scannerVideo.readyState === scannerVideo.HAVE_ENOUGH_DATA) {
-      scanCanvas.width = scannerVideo.videoWidth;
-      scanCanvas.height = scannerVideo.videoHeight;
+      if (scanCanvas.width !== scannerVideo.videoWidth || scanCanvas.height !== scannerVideo.videoHeight) {
+        scanCanvas.width = scannerVideo.videoWidth;
+        scanCanvas.height = scannerVideo.videoHeight;
+      }
+
       scanCtx.drawImage(scannerVideo, 0, 0, scanCanvas.width, scanCanvas.height);
 
       let text = null;
+
+      // 1. Probar con BarcodeDetector nativo
       if (barcodeDetector) {
         try {
           const results = await barcodeDetector.detect(scanCanvas);
-          if (results.length) text = results[0].rawValue;
+          if (results && results.length > 0) {
+            text = results[0].rawValue;
+          }
         } catch (e) { }
-      } else if (typeof jsQR !== 'function') {
+      }
+
+      // 2. Si BarcodeDetector no detectó nada (o no existe), usar jsQR como respaldo
+      if (!text && typeof jsQR === 'function') {
         const imageData = scanCtx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
-        const result = jsQR(imageData.data, imageData.width, imageData.height);
+        const result = jsQR(imageData.data, imageData.width, imageData.height, {
+          inversionAttempts: "dontInvert",
+        });
         if (result) text = result.data;
       }
 
@@ -994,7 +1006,9 @@
       }
     }
 
-    if (scanning) requestAnimationFrame(scanTick);
+    if (scanning) {
+      requestAnimationFrame(scanTick);
+    }
   }
 
   function handleScanResult(rawText) {
